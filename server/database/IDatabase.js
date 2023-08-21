@@ -1,3 +1,7 @@
 class IDatabase{
-    async connect();
+    async connect(){
+
+    };
 }
+
+module.exports = IDatabase;

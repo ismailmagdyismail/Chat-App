@@ -1,6 +1,7 @@
+const IDatabase = require('./IDatabase');
 const mongoose = require("mongoose");
 const env = require('dotenv');
-env.config({path:'../config.env'});
+env.config({path:'./config.env'});
 
 
 let instance = null;
@@ -22,7 +23,7 @@ class MongoDB extends IDatabase{
 }
 
 
-module.exports = function getInstance(){
+module.exports.getInstance = function (){
     if(instance === null){
         instance = new MongoDB(process.env.CONNECTION_STRING);
     }
