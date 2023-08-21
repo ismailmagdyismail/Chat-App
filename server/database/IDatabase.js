@@ -1,0 +1,3 @@
+class IDatabase{
+    async connect();
+}
