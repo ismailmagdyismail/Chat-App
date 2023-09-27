@@ -1,5 +1,5 @@
-export interface ConversationModel{
-    id:string;
+export interface Conversation{
+    id?:string;
     firstMemberId:string;
     secondMemberId:string;
 }
