@@ -32,10 +32,19 @@ export async function signupHandler (req:Request, res:Response):Promise<void>{
 }
 
 export async function loginHandler(req:Request, res:Response):Promise<void>{
+    console.log("LOGIN");
     const user:User = {
         phoneNumber:req.body.phoneNumber,
         password:req.body.password,
         name:req.body.name,
+    }
+    console.log(user);
+    if(!user.phoneNumber || !user.password){
+        res.status(400).json({
+           status:"fail",
+           message:"phone number, password must be provided"
+        });
+        return;
     }
     const storedUser:User|null = await getUserByPhoneService(user.phoneNumber);
     if(!storedUser){
