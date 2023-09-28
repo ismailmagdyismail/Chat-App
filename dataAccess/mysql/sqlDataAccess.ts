@@ -3,9 +3,9 @@ import {User} from "../../models/userModel";
 import {Message} from "../../models/messageModel";
 import {Conversation} from "../../models/conversationModel";
 import MySqlDatabase from "../../database/MySql/MySqlDatabase";
+import {AppError} from "../../errors/AppError";
 
 export default class SqlDataAccess implements IDataAccess{
-    private dataBase :MySqlDatabase;
     /**
      *
      * THIS MIGHT NOT WORK AND BE UNDEFINED CAUSE DATABASE MUST BE RUN FIRST WHICH IS BAD DESIGN I THINK
@@ -29,7 +29,7 @@ export default class SqlDataAccess implements IDataAccess{
             }
             return null;
         } catch (err){
-            throw err;
+            throw this.getDatabaseError(err);
         }
     }
     async getUserByPhoneNumber(phoneNumber: string): Promise<User|null> {
@@ -46,7 +46,7 @@ export default class SqlDataAccess implements IDataAccess{
             }
             return null;
         } catch (err){
-            throw err;
+            throw this.getDatabaseError(err);
         }
     }
     async createUser(user: User): Promise<User|null> {
@@ -64,7 +64,7 @@ export default class SqlDataAccess implements IDataAccess{
             }
             return null;
         } catch (err){
-            throw err;
+            throw this.getDatabaseError(err);
         }
     }
     async getConversationById(id: string): Promise<Conversation|null> {
@@ -79,7 +79,7 @@ export default class SqlDataAccess implements IDataAccess{
             }
             return null;
         } catch (err){
-            throw err;
+            throw this.getDatabaseError(err);
         }
     }
     async createConversation(conversation: Conversation): Promise<Conversation|null> {
@@ -96,7 +96,7 @@ export default class SqlDataAccess implements IDataAccess{
             }
             return null;
         } catch (err){
-            throw err;
+            throw this.getDatabaseError(err );
         }
     }
     async getUserConversations(id: string): Promise<Conversation[]|null> {
@@ -113,7 +113,14 @@ export default class SqlDataAccess implements IDataAccess{
             }
             return null;
         } catch (err){
-            throw err;
+            throw this.getDatabaseError(err );
+        }
+    }
+    async deleteConversation(id:string):Promise<void>{
+        try {
+            await this.dataBase.getConnection()!.execute("DELETE FROM conversations WHERE id = ?",[id])
+        }catch (err){
+            throw this.getDatabaseError(err);
         }
     }
     async getMessageById(id: string): Promise<Message|null> {
@@ -129,7 +136,7 @@ export default class SqlDataAccess implements IDataAccess{
             }
             return null;
         } catch (err){
-            throw err;
+            throw this.getDatabaseError(err );
         }
     }
     async getMessagesByConversation(conversationId: string): Promise<Message[]|null> {
@@ -148,7 +155,7 @@ export default class SqlDataAccess implements IDataAccess{
             }
             return null;
         } catch (err){
-            throw err;
+            throw this.getDatabaseError(err );
         }
     }
     async createMessage(message: Message): Promise<Message|null> {
@@ -166,7 +173,22 @@ export default class SqlDataAccess implements IDataAccess{
             }
             return null;
         } catch (err){
-            throw err;
+            throw this.getDatabaseError(err);
         }
+    }
+    async deleteMessage(id:string):Promise<void>{
+        try {
+            await this.dataBase.getConnection()!.execute("DELETE FROM messages WHERE id = ?",[id])
+        } catch (err){
+            throw this.getDatabaseError(err);
+        }
+    }
+    private getDatabaseError(err:any):AppError{
+
+        return new AppError("fail","400");
+    }
+
+    private dataBase :MySqlDatabase;
+    private error ={
     }
 }
