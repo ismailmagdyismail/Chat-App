@@ -4,6 +4,7 @@ import {Message} from "../../models/messageModel";
 import {Conversation} from "../../models/conversationModel";
 import MySqlDatabase from "../../database/MySql/MySqlDatabase";
 import {AppError} from "../../errors/AppError";
+import App from "../../app";
 
 export default class SqlDataAccess implements IDataAccess{
     /**
@@ -18,7 +19,7 @@ export default class SqlDataAccess implements IDataAccess{
     }
     async getUserById(id: string): Promise<User|null> {
         try {
-            const [rows]:any[] = await this.dataBase.getConnection()!.execute("SELECT name,phone_number FROM users WHERE id = ?",[id]);
+            const [rows]:any[] = await this.dataBase.getConnection()!.execute("SELECT id,name,phone_number,password FROM users WHERE id = ?",[id]);
             if (rows.length) {
                 return {
                     id: rows[0].id,
@@ -35,7 +36,7 @@ export default class SqlDataAccess implements IDataAccess{
     async getUserByPhoneNumber(phoneNumber: string): Promise<User|null> {
         try {
             const [rows]:any[] = await this.dataBase.getConnection()!.execute
-            ("SELECT name,phone_number FROM users WHERE phone_number = ?",[phoneNumber]);
+            ("SELECT id,name,phone_number,password FROM users WHERE phone_number = ?",[phoneNumber]);
             if(rows.length){
                 return {
                     id: rows[0].id,
@@ -53,7 +54,7 @@ export default class SqlDataAccess implements IDataAccess{
         try {
             await this.dataBase.getConnection()!.execute
             ("INSERT INTO users (name, phone_number, password) values (?,?,?)",[user.name,user.phoneNumber,user.password]);
-            const [rows]:any[] = await this.dataBase.getConnection()!.execute("SELECT name,phone_number FROM users ORDER BY id DESC LIMIT 1");
+            const [rows]:any[] = await this.dataBase.getConnection()!.execute("SELECT id,name,phone_number,password FROM users ORDER BY id DESC LIMIT 1");
             if(rows.length){
                 return {
                     id: rows[0].id,
@@ -118,7 +119,8 @@ export default class SqlDataAccess implements IDataAccess{
     }
     async deleteConversation(id:string):Promise<void>{
         try {
-            await this.dataBase.getConnection()!.execute("DELETE FROM conversations WHERE id = ?",[id])
+            console.log("DONE");
+            await this.dataBase.getConnection()!.execute("DELETE FROM conversations WHERE id = ?",[id]);
         }catch (err){
             throw this.getDatabaseError(err);
         }
@@ -129,8 +131,8 @@ export default class SqlDataAccess implements IDataAccess{
             if(rows.length){
                 return {
                     id:rows[0].id,
-                    conversation_id:rows[0].conversation_id,
-                    sent_by:rows[0].send_by,
+                    conversationId:rows[0].conversation_id,
+                    sentBy:rows[0].send_by,
                     content:rows[0].content,
                 };
             }
@@ -148,7 +150,7 @@ export default class SqlDataAccess implements IDataAccess{
                     return{
                         id:row.id,
                         conversation_id:row.conversation_id,
-                        send_by:row.send_by,
+                        sent_by:row.sent_by,
                         content:row.content,
                     };
                 });
@@ -161,13 +163,13 @@ export default class SqlDataAccess implements IDataAccess{
     async createMessage(message: Message): Promise<Message|null> {
         try {
             await this.dataBase.getConnection()!.execute
-            ("INSERT INTO messages (content,sent_by,conversation_id) values(?,?,?)",[message.content,message.sent_by,message.conversation_id]);
+            ("INSERT INTO messages (content,sent_by,conversation_id) values(?,?,?)",[message.content,message.sentBy,message.conversationId]);
             const [rows]:any = await this.dataBase.getConnection()!.execute("SELECT * FROM messages ORDER BY id DESC LIMIT 1");
             if (rows.length){
                 return {
                     id:rows[0].id,
-                    conversation_id:rows[0].conversation_id,
-                    sent_by:rows[0].send_by,
+                    conversationId:rows[0].conversation_id,
+                    sentBy:rows[0].send_by,
                     content:rows[0].content,
                 };
             }
@@ -184,11 +186,22 @@ export default class SqlDataAccess implements IDataAccess{
         }
     }
     private getDatabaseError(err:any):AppError{
-
-        return new AppError("fail","400");
+        if(err.code === "ER_DUP_ENTRY"){
+            return new AppError(400,"Duplicate data")
+        }
+        else if (err.code === "ER_NO_DEFAULT_FOR_FIELD"){
+            return new AppError(400,"Missing data");
+        }
+        else if(err.code == "ER_NO_REFERENCED_ROW_2"){
+            return new AppError(400,"Entity Doesn't exist");
+        }
+        return new AppError(500,"DB ERROR");
     }
 
     private dataBase :MySqlDatabase;
-    private error ={
-    }
+    // private error ={
+    //     "ER_DUP_ENTRY":new AppError("fail","400","Duplicate data"),
+    //     "ER_PARSE_ERROR":new AppError("fail","500","Query Error / Invalid Query"),
+    //     "ER_NO_DEFAULT_FOR_FIELD":new AppError("fail","400","Missing data"),
+    // }
 }
