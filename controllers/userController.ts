@@ -1,6 +1,10 @@
-import {Request, Response} from "express";
-import {createUserService, getUserByPhoneService} from "../services/userServices/userServices";
+import {NextFunction, Request, Response} from "express";
+import {signupService, loginService} from "../services/userServices/userServices";
 import {User} from "../models/userModel";
+import {asyncErrorHandler} from "../middleware/asyncErrorHandlerMiddleware";
+import {Handler} from "../types/types";
+import {AppError} from "../errors/AppError";
+import {JwtAuthentication} from "../services/authenticationServices/jwtAuthentication";
 
 /**
  *
@@ -8,57 +12,36 @@ import {User} from "../models/userModel";
  * and make their CONTROLLERS just for PARSING
  *
  */
-export async function signupHandler (req:Request, res:Response):Promise<void>{
+export const signupHandler:Handler =
+    asyncErrorHandler(async (req:Request, res:Response,next:NextFunction):Promise<void>=>{
     const user:User = {
         name:req.body.name,
         password:req.body.password,
         phoneNumber:req.body.phoneNumber,
     }
     if (!user.name || !user.phoneNumber || !user.password){
-        res.status(400).json({
-            status:"fail",
-            message:"all fields must be specified"
-        });
-        return;
+        return next(new AppError(400,"all fields must be specified"));
     }
-    const createdUser:User|null = await createUserService(user);
-    /**
-     * SEND JWT TOKEN TOOOO
-     */
+    const token:string = await signupService(user,new JwtAuthentication());
     res.status(201).json({
        status:"success",
-       data:createdUser
+       token
     });
-}
+});
 
-export async function loginHandler(req:Request, res:Response):Promise<void>{
-    console.log("LOGIN");
+export const loginHandler:Handler =
+    asyncErrorHandler(async (req:Request, res:Response,next:NextFunction):Promise<void>=>{
     const user:User = {
         phoneNumber:req.body.phoneNumber,
         password:req.body.password,
         name:req.body.name,
     }
-    console.log(user);
     if(!user.phoneNumber || !user.password){
-        res.status(400).json({
-           status:"fail",
-           message:"phone number, password must be provided"
-        });
-        return;
+        return next(new AppError(400,"phone number, password must be provided"));
     }
-    const storedUser:User|null = await getUserByPhoneService(user.phoneNumber);
-    if(!storedUser){
-        res.status(404).json({
-            status:"fail",
-            message:"User Not found"
-        });
-        return;
-    }
+    const token:string = await loginService(user,new JwtAuthentication());
     res.status(200).json({
         status:"success",
-        data:storedUser,
+        token
     });
-    /**
-     * SEND TOKEN
-     */
-}
+});
