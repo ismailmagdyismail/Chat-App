@@ -1,9 +1,9 @@
 # Chat-APP
 A Web application that Enables Real-time one-to-one messaging 
-(TO-DO)
--Client with REACTJS
--Real-time-Messaging Service , WebSockets instead of REST
--Add support for Cloud MongoDB
+## (TO-DO)
+- Client with REACTJS
+- Real-time-Messaging Service , WebSockets instead of REST
+- Add support for Cloud MongoDB
 
 ## Table of contents
 - [Project overview](#project-overview)
