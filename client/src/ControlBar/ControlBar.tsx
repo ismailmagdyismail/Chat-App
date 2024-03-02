@@ -19,7 +19,7 @@ export default function ControlBar() {
       flexDirection="column"
       padding="2rem"
       gap="2rem"
-      backgroundColor={theme.background.conversationsList}
+      backgroundColor={theme.background.controls}
       borderRight={"1px solid #bbb"}
     >
       <Container borderBottom={"2px solid #bbb"} paddingBottom={"1rem"}>
